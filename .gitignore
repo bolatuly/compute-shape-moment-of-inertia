@@ -1,0 +1,22 @@
+# ignore result
+result/
+
+# ignore compiled classes
+bin/
+
+# ignore compiled classes
+target/
+
+.metadata/
+
+.recommenders/
+
+# ignore IDEA files
+output
+*.iml
+.settings
+.project
+.classpath
+.co
+.idea
+compute_shape_moment_of_inertia.iml
