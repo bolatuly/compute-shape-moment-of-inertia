@@ -44,26 +44,44 @@ public class Polygon {
     }
 
     public void translateAndScale(){
-        double max_x = -180, max_y =-180;
-        double min_x = 180, min_y = 180;
+        //get Boundary of Data
+        double east = -180, north =-180;
+        double west = 180, south = 180;
+
         for (int i = 0 ; i < size ; i++){
-            if (coords.get(i).getX() < min_x)
-                min_x = coords.get(i).getX();
-            if (coords.get(i).getX() > max_x)
-                max_x = coords.get(i).getX();
-            if (coords.get(i).getY() < min_y)
-                min_y = coords.get(i).getY();
-            if (coords.get(i).getY() > max_y)
-                max_y = coords.get(i).getX();
+            if (coords.get(i).getX() < west)
+                west = coords.get(i).getX();
+            if (coords.get(i).getX() > east)
+                east = coords.get(i).getX();
+            if (coords.get(i).getY() < south)
+                south = coords.get(i).getY();
+            if (coords.get(i).getY() > north)
+                north = coords.get(i).getY();
         }
 
+        // This also controls the aspect ratio of the projection
+        double height = 1000.0;
+        double width = 1000.0 * (east - west) / (north - south);
+
+        double Ymin = mercY(south);
+        double Ymax = mercY(north);
+        double xFactor = width / (east - west);
+        double yFactor = height / (Ymax - Ymin);
+
+        //Map Projection
         for (int i = 0 ; i < size + 1 ; i++){
+            double x = (coords.get(i).x - west) * xFactor;
+            double y = mercY(coords.get(i).y);
+            y = (Ymax - y) * yFactor;
 
-            coords.get(i).x-=Math.floor(min_x);
-            coords.get(i).y -= Math.floor(min_y);
+            coords.get(i).setX(x);
+            coords.get(i).setY(y);
         }
-
+        System.out.println();
     }
+
+
+    public double mercY(double lat) { return Math.log(Math.tan(lat/2 + Math.PI/4)); }
 
     public void fixNegativeArea(){
         for (int i = 0 ; i < size ; i++){
