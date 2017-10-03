@@ -43,21 +43,19 @@ public class Polygon {
         setIG();
     }
 
+    //Mercator projection
+    //https://stackoverflow.com/questions/18838915/convert-lat-lon-to-pixel-coordinate
     public void translateAndScale(){
         //get Boundary of Data
-        double east = -180, north =-180;
-        double west = 180, south = 180;
+        MBR mbr = new MBR().calc();
 
-        for (int i = 0 ; i < size ; i++){
-            if (coords.get(i).getX() < west)
-                west = coords.get(i).getX();
-            if (coords.get(i).getX() > east)
-                east = coords.get(i).getX();
-            if (coords.get(i).getY() < south)
-                south = coords.get(i).getY();
-            if (coords.get(i).getY() > north)
-                north = coords.get(i).getY();
-        }
+        double east = Math.toRadians(mbr.getEast());
+        double west = Math.toRadians(mbr.getWest());
+        double north = Math.toRadians(mbr.getNorth());
+        double south = Math.toRadians(mbr.getSouth());
+
+        //Degree To radians
+        degreeToRadians();
 
         // This also controls the aspect ratio of the projection
         double height = 1000.0;
@@ -70,18 +68,32 @@ public class Polygon {
 
         //Map Projection
         for (int i = 0 ; i < size + 1 ; i++){
-            double x = (coords.get(i).x - west) * xFactor;
-            double y = mercY(coords.get(i).y);
+            Double x = (coords.get(i).x - west) * xFactor;
+            Double y = mercY(coords.get(i).y);
             y = (Ymax - y) * yFactor;
+
+            if (Double.isNaN(y) || Double.isNaN(x)){
+                System.out.println("NAN in here");
+            }
 
             coords.get(i).setX(x);
             coords.get(i).setY(y);
         }
-        System.out.println();
+
+
+    }
+    private void degreeToRadians(){
+        for (int i = 0 ; i < size + 1 ; i++){
+            coords.get(i).x = Math.toRadians(coords.get(i).getX());
+            coords.get(i).y = Math.toRadians(coords.get(i).getY());
+        }
     }
 
-
-    public double mercY(double lat) { return Math.log(Math.tan(lat/2 + Math.PI/4)); }
+    public double mercY(double lat) {
+        double half_lat = lat/2;
+        double tangent = Math.tan(half_lat + Math.PI/4);
+        return Math.log(tangent);
+    }
 
     public void fixNegativeArea(){
         for (int i = 0 ; i < size ; i++){
@@ -153,5 +165,54 @@ public class Polygon {
 
     public static double getSquareDistance(Coordinate start, Coordinate end) {
         return Math.pow(end.getX() - start.getX(), 2) + Math.pow(end.getY() - start.getY(), 2);
+    }
+
+    private class MBR {
+        private double east;
+        private double north;
+        private double west;
+        private double south;
+
+        public MBR() {
+            this.east = -180;
+            this.north = -180;
+            this.west = 180;
+            this.south = 180;
+        }
+
+        public void setWest(double west) {
+            this.west = west;
+        }
+
+        public double getEast() {
+            return east;
+        }
+
+        public double getNorth() {
+            return north;
+        }
+
+        public double getWest() {
+            return west;
+        }
+
+        public double getSouth() {
+            return south;
+        }
+
+        public MBR calc() {
+            for (int i = 0 ; i < size ; i++){
+                if (coords.get(i).getX() < west)
+                    west = coords.get(i).getX();
+                if (coords.get(i).getX() > east)
+                    east = coords.get(i).getX();
+                if (coords.get(i).getY() < south)
+                    south = coords.get(i).getY();
+                if (coords.get(i).getY() > north)
+                    north = coords.get(i).getY();
+            }
+            return this;
+        }
+
     }
 }
